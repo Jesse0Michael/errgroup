@@ -68,22 +68,27 @@ func (g *SizedErrGroup) done() {
 // Go calls the given function in a new goroutine.
 // The first call to return a non-nil error cancels the group; its error will be returned by Wait.
 func (g *SizedErrGroup) Go(f func() error) {
-	select {
-	case g.current <- struct{}{}:
-		g.wg.Add(1)
+	g.wg.Add(1)
 
-		go func() {
-			defer g.done()
+	go func() {
+		select {
+		case g.current <- struct{}{}:
 
-			if err := f(); err != nil {
-				g.errOnce.Do(func() {
-					g.err = err
-					if g.cancel != nil {
-						g.cancel()
-					}
-				})
-			}
-		}()
-	case <-g.ctx.Done():
-	}
+			go func() {
+				defer g.done()
+
+				if err := f(); err != nil {
+					g.errOnce.Do(func() {
+						g.err = err
+						if g.cancel != nil {
+							g.cancel()
+						}
+					})
+				}
+			}()
+			return
+		case <-g.ctx.Done():
+			return
+		}
+	}()
 }

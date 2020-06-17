@@ -1,3 +1,3 @@
-module github.com/jesse0michael/sized-error-group
+module github.com/jesse0michael/errgroup
 
 go 1.14

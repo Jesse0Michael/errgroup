@@ -1,6 +1,7 @@
 package errgroup
 
 import (
+	"context"
 	"fmt"
 	"time"
 )
@@ -15,7 +16,7 @@ func TimeSinceAndWait(t time.Time) func() error {
 
 func IsEven(i int) func() error {
 	return func() error {
-		time.Sleep(time.Duration(i*100) * time.Millisecond)
+		time.Sleep(time.Duration(i*500) * time.Millisecond)
 		if i%2 == 0 {
 			fmt.Printf("number '%d' is even\n", i)
 			return nil
@@ -48,9 +49,10 @@ func ExampleNewSizedErrGroup() {
 }
 
 func ExampleNewSizedErrGroup_withFailure() {
-	g := NewSizedErrGroup(2)
+	g := NewSizedErrGroup(0)
 	for i := 0; i < 5; i++ {
 		g.Go(IsEven(i))
+		time.Sleep(100 * time.Millisecond)
 	}
 
 	err := g.Wait()
@@ -60,4 +62,26 @@ func ExampleNewSizedErrGroup_withFailure() {
 	// number '0' is even
 	// number '1' is not even
 	// err: number '1' is not even
+}
+
+func ExampleWithContext_cancel() {
+	start := time.Now()
+	ctx, cancel := context.WithCancel(context.TODO())
+	g, _ := WithContext(ctx, 2)
+	for i := 0; i < 10; i++ {
+		g.Go(TimeSinceAndWait(start))
+	}
+
+	go func() {
+		time.Sleep(500 * time.Millisecond)
+		cancel()
+	}()
+
+	err := g.Wait()
+	fmt.Printf("err: %v\n", err)
+
+	// Output:
+	// func: time since start: 0 seconds
+	// func: time since start: 0 seconds
+	// err: wait group context cancelled
 }
