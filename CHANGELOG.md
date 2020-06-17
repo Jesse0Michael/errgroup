@@ -1,3 +1,9 @@
+## [1.0.1](https://github.com/Jesse0Michael/errgroup/compare/v1.0.0...v1.0.1) (2020-06-17)
+
+### Bug Fixes
+
+- fix canceling errgroup by context ([e1c3fac](https://github.com/Jesse0Michael/errgroup/commit/e1c3faca43d05100539d3e1a8d9e4437cf2de8fa))
+
 # 1.0.0 (2020-06-16)
 
 ### Continuous Integration
