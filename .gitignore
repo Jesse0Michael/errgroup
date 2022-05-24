@@ -1,0 +1,21 @@
+##############################
+# Folders
+##############################
+.idea
+.vscode
+bin
+vendor
+__pycache__
+
+##############################
+# Files
+##############################
+.env
+.DS_Store
+.AppleSingle
+.AppleDouble
+*.sublime-project
+*.sublime-workspace
+Thumbs.db
+coverage.out
+__debug_bin

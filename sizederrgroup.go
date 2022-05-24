@@ -92,3 +92,30 @@ func (g *SizedErrGroup) Go(f func() error) {
 		}
 	}()
 }
+
+// BlockingGo calls the given function in a new goroutine.
+// The first call to return a non-nil error cancels the group; its error will be returned by Wait.
+// Blocks spawning a go routine if size limit is met
+func (g *SizedErrGroup) BlockingGo(f func() error) {
+	g.wg.Add(1)
+	for {
+		select {
+		case g.current <- struct{}{}:
+			go func() {
+				defer g.done()
+
+				if err := f(); err != nil {
+					g.errOnce.Do(func() {
+						g.err = err
+						if g.cancel != nil {
+							g.cancel()
+						}
+					})
+				}
+			}()
+			return
+		case <-g.ctx.Done():
+			return
+		}
+	}
+}

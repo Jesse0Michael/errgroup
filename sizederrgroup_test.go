@@ -2,7 +2,9 @@ package errgroup
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"testing"
 	"time"
 )
 
@@ -84,4 +86,63 @@ func ExampleWithContext_cancel() {
 	// func: time since start: 0 seconds
 	// func: time since start: 0 seconds
 	// err: wait group context cancelled
+}
+
+func TestSizedErrGroup_BlockingGo(t *testing.T) {
+	tests := []struct {
+		name   string
+		values []bool
+		ctx    context.Context
+		err    error
+	}{
+		{
+			name:   "successful wait",
+			values: []bool{false, false, false},
+			ctx:    context.TODO(),
+		},
+		{
+			name:   "failed wait",
+			values: []bool{false, true, false},
+			ctx:    context.TODO(),
+			err:    errors.New("thrown error"),
+		},
+		{
+			name:   "canceled wait",
+			values: []bool{false, false, false},
+			ctx: func() context.Context {
+				ctx, cancel := context.WithCancel(context.TODO())
+				cancel()
+				return ctx
+			}(),
+			err: errors.New("wait group context cancelled"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g, _ := WithContext(tt.ctx, 2)
+			for _, t := range tt.values {
+				g.BlockingGo(func(throw bool) func() error {
+					return func() error {
+						time.Sleep(time.Duration(500) * time.Millisecond)
+						if throw {
+							return errors.New("thrown error")
+						}
+						return nil
+					}
+				}(t))
+			}
+
+			err := g.Wait()
+			if tt.err == nil && err != nil {
+				t.Errorf("unexpected error from Wait(): %s", err)
+			}
+			if tt.err != nil {
+				if err == nil {
+					t.Error("expected error from Wait()")
+				} else if tt.err.Error() != err.Error() {
+					t.Errorf("unexpected error from Wait() got: %s wanted: %s", err, tt.err)
+				}
+			}
+		})
+	}
 }
