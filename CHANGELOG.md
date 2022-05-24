@@ -1,3 +1,9 @@
+# [1.1.0](https://github.com/Jesse0Michael/errgroup/compare/v1.0.1...v1.1.0) (2022-05-24)
+
+### Features
+
+- add blocking function ([758b99e](https://github.com/Jesse0Michael/errgroup/commit/758b99ec6c659ce0c32a3fdcee8fdd4a9da77ba7))
+
 ## [1.0.1](https://github.com/Jesse0Michael/errgroup/compare/v1.0.0...v1.0.1) (2020-06-17)
 
 ### Bug Fixes
